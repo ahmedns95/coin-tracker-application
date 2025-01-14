@@ -28,7 +28,7 @@ class AppTextFormField extends StatelessWidget {
     this.onChanged,
     this.onTap,
     this.inputFormatters,
-    this.textAlign=TextAlign.start,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -37,14 +37,16 @@ class AppTextFormField extends StatelessWidget {
       controller: controller,
       obscureText: isPassword,
       keyboardType: keyboardType,
-
       validator: validator,
       onChanged: onChanged,
       onTap: onTap,
       textAlign: textAlign,
       inputFormatters: inputFormatters,
+      style: TextStyle(color: AppColors.kTextSecondaryFiled),
       decoration: InputDecoration(
-        labelStyle: TextStyle(color: AppColors.kPrimaryColor,),
+        labelStyle: TextStyle(
+          color: AppColors.kTextSecondaryFiled,
+        ),
         labelText: labelText,
         hintText: hintText,
         prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
@@ -53,11 +55,11 @@ class AppTextFormField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: AppColors.kPrimaryColor),
+          borderSide: BorderSide(color: AppColors.kTextPrimaryFiled),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: BorderSide(color: Colors.grey),
+          borderSide: BorderSide(color: AppColors.kTextPrimaryFiled),
         ),
       ),
     );

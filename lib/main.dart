@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'global_widgets/app_data_container.dart';
 import 'global_widgets/app_text.dart';
 import 'signal_screen.dart';
 import 'global_widgets/app_text_button.dart';
@@ -217,17 +218,18 @@ class _MyHomePageState extends State<MyHomePage> {
     double weightedChangeScore =
         (priceChange / 100) * (tradingVolume / marketCap);
     if (weightedChangeScore < -0.05) {
-      return 'Buy: ${coinNameController.text} has a weighted change score of ${weightedChangeScore.toStringAsFixed(4)}.';
+      return 'Buy\nWeighted change score: ${weightedChangeScore.toStringAsFixed(4)}.';
     } else if (weightedChangeScore > 0.05) {
-      return 'Sell: ${coinNameController.text} has a weighted change score of ${weightedChangeScore.toStringAsFixed(4)}.';
+      return 'Sell\nWeighted change score: ${weightedChangeScore.toStringAsFixed(4)}.';
     } else {
-      return 'Hold: No strong signals for ${coinNameController.text}. Weighted change score: ${weightedChangeScore.toStringAsFixed(4)}.';
+      return 'Hold\nWeighted change score: ${weightedChangeScore.toStringAsFixed(4)}';
     }
   }
 
   Color? actionColor;
   String? action;
-  bool isLoading=false;
+  bool isLoading = false;
+
   void _incrementCounter() async {
     setState(() {
       isLoading = true;
@@ -251,6 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
+
   // void _incrementCounter() {
   //   setState(() {
   //     fetchPrice(coinNameController.text);
@@ -267,21 +270,39 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.kPrimaryColor1,
+      // drawer: Drawer(
+      //   backgroundColor: AppColors.kPrimaryColor1,
+      //   shadowColor: AppColors.kPrimaryColor,
+      //   child: Column(
+      //     children: [
+      //       AppTextButton(
+      //         title: "Signal Chart",
+      //         onTap: () {
+      //           Navigator.of(context).push(MaterialPageRoute(
+      //               builder: (context) => SignalScreen(
+      //                     title: 'Signal buy & sell',
+      //                   )));
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
       appBar: AppBar(
-        backgroundColor: AppColors.kPrimaryColor,
+        backgroundColor: AppColors.kPrimaryColor1,
         //Theme.of(context).colorScheme.onPrimaryContainer,
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+        // title: Text(widget.title, style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: Column(
-            spacing: 20,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            spacing: 15,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              SizedBox(height: 30),
               AppText(
-                title: 'Pulling the currency price',
+                title: 'Crypto Tracker',
               ),
               AppTextFormField(
                 controller: coinNameController,
@@ -311,86 +332,82 @@ class _MyHomePageState extends State<MyHomePage> {
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,5}')),
                 ],
               ),
+              AppTextButton(
+                title: "Signal Chart",
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => SignalScreen(
+                            title: 'Signal buy & sell',
+                          )));
+                },
+              ),
+              AppTextButton(
+                title: "Pull coin data",
+                onTap: () {
+                  _incrementCounter();
+                },
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  AppTextButton(
-                    title: "Signal Chart",
-                    onTap: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => SignalScreen(
-                                title: 'Signal buy & sell',
-                              )));
-                    },
+                  AppDataContainer(
+                    title: "Price",
+                    subtitle: coinPrice.toStringAsFixed(5) == "0.00000"
+                        ? "--"
+                        : "\$${coinPrice.toStringAsFixed(5)}",
+                    subtitle2:
+                        "%${determinePricePercentage().toStringAsFixed(2)}",
                   ),
-                  AppTextButton(
-                    title: "Pull coin data",
-                    onTap: () {
-                      _incrementCounter();
-                    },
+                  AppDataContainer(
+                    title: "Purchase",
+                    subtitle: priceVolume().toStringAsFixed(2) == "0.00"
+                        ? "--"
+                        : "\$${priceVolume().toStringAsFixed(2)}",
                   ),
                 ],
-              ),
-              AppText(
-                title: "Current price: ${coinPrice.toStringAsFixed(5)}",
-                  fontSize: 22,
-              ),
-              AppText(
-                title: "Action: ${determineTradeAction(priceChange, tradingVolume)}",
-                fontColor: actionColor,
-                // fontSize: 30,
-              ),
-              AppText(
-                title: "Sell when get the price to",
               ),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    children: [
-                      AppText(
-                          title:
-                              "${calculateSellPriceUp().toStringAsFixed(4)}\n${priceVolumeSellUp().toStringAsFixed(4)}",
-                          fontColor: Colors.green),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Icon(
-                        Icons.arrow_upward,
-                        color: Colors.green,
-                      ),
-                    ],
+                  AppDataContainer(
+                    title:
+                        "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%"}${targetPercentageController.text}",
+                    subtitle:
+                        calculateSellPriceUp().toStringAsFixed(4) == "0.0000"
+                            ? "--"
+                            : "\$${calculateSellPriceUp().toStringAsFixed(4)}",
+                    subtitle2: priceVolumeSellUp().toStringAsFixed(2) == "0.00"
+                        ? "--"
+                        : "\$${priceVolumeSellUp().toStringAsFixed(2)}",
                   ),
-                  Row(
-                    children: [
-                      AppText(
-                          title:
-                              "${calculateSellPriceDown().toStringAsFixed(4)}\n${priceVolumeSellDown().toStringAsFixed(4)}",
-                          fontColor: Colors.red),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Icon(
-                        Icons.arrow_downward,
-                        color: Colors.red,
-                      ),
-                    ],
+                  AppDataContainer(
+                    title:
+                        "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%-"}${targetPercentageController.text}",
+                    subtitle: calculateSellPriceDown().toStringAsFixed(4) ==
+                            "0.0000"
+                        ? "--"
+                        : "\$${calculateSellPriceDown().toStringAsFixed(4)}",
+                    subtitle2:
+                        priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                            ? "--"
+                            : "\$${priceVolumeSellDown().toStringAsFixed(2)}",
                   ),
                 ],
               ),
-              AppText(title: "Volume buying : ${priceVolume().toStringAsFixed(4)}"),
-              AppText(
-                title: "Determine trade action advanced",
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  AppDataContainer(
+                    title: "WCS",
+                    subtitle: determineTradeActionAdvanced(
+                        priceChange, tradingVolume, marketCap),
+                  ),
+                  AppDataContainer(
+                    title: "Action",
+                    subtitle: determineTradeAction(priceChange, tradingVolume),
+                  ),
+                ],
               ),
-              AppText(
-                title: determineTradeActionAdvanced(
-                    priceChange, tradingVolume, marketCap),
-                fontColor: actionColor,
-              ),
-              AppText(
-                  title: "${determinePricePercentage().toStringAsFixed(2)}%",
-                  fontSize: 25),
             ],
           ),
         ),

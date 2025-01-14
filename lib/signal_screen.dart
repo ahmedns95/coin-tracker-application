@@ -1,3 +1,4 @@
+import 'package:coin_tracker_application/global_widgets/app_text.dart';
 import 'package:coin_tracker_application/global_widgets/app_text_button.dart';
 import 'package:coin_tracker_application/global_widgets/app_text_form_field.dart';
 import 'package:flutter/material.dart';
@@ -186,6 +187,7 @@ class _SignalScreenState extends State<SignalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.kPrimaryColor1,
       appBar: AppBar(
         actions: [
           Directionality(
@@ -195,8 +197,8 @@ class _SignalScreenState extends State<SignalScreen> {
                 style: ButtonStyle(),
               ))
         ],
-        backgroundColor: AppColors.kPrimaryColor,
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+        backgroundColor: AppColors.kPrimaryColor1,
+        title: AppText(title: widget.title),
       ),
       body: SingleChildScrollView(
         child: Padding(
