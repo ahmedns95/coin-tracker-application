@@ -1,7 +1,11 @@
+import 'package:coin_tracker_application/global_widgets/app_text_button.dart';
+import 'package:coin_tracker_application/global_widgets/app_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
+
+import 'config/app_colors.dart';
 
 class SignalScreen extends StatefulWidget {
   const SignalScreen({super.key, required this.title});
@@ -191,7 +195,7 @@ class _SignalScreenState extends State<SignalScreen> {
                 style: ButtonStyle(),
               ))
         ],
-        backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        backgroundColor: AppColors.kPrimaryColor,
         title: Text(widget.title, style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
@@ -199,18 +203,14 @@ class _SignalScreenState extends State<SignalScreen> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: <Widget>[
-              TextFormField(
+              AppTextFormField(
                 controller: coinNameController,
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  labelText: 'Enter Coin Name',
-                  border: OutlineInputBorder(),
-                ),
+                labelText: 'Enter Coin Name',
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => fetchPriceData(coinNameController.text),
-                child: const Text("Pull Price List"),
+              AppTextButton(
+                title: "Pull Price List",
+                onTap: () => fetchPriceData(coinNameController.text),
               ),
               const SizedBox(height: 20),
               if (prices.isNotEmpty) ...[
