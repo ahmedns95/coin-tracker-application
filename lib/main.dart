@@ -50,8 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double priceChange = 0;
   double tradingVolume = 0;
   double marketCap = 0;
-
-  Future<double?> fetchPrice(String coinName) async {
+  Future<double?> fetchPrice(BuildContext context, String coinName) async {
     String url =
         "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=7";
     try {
@@ -60,22 +59,112 @@ class _MyHomePageState extends State<MyHomePage> {
         "x-cg-demo-api-key": "CG-ugm8MRqxgSuCAjmZGPVhsMMR"
       });
 
+      debugPrint('response.statusCode: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        coinPrice = data[coinName]['usd']?.toDouble();
-        priceChange = data[coinName]['usd_24h_change']?.toDouble();
-        tradingVolume = data[coinName]['usd_24h_vol']?.toDouble();
-        marketCap = data[coinName]['usd_market_cap']?.toDouble();
-        return data[coinName]['usd']?.toDouble();
+        if (data[coinName] != null && data[coinName]['usd'] != null) {
+          coinPrice = data[coinName]['usd']?.toDouble();
+          priceChange = data[coinName]['usd_24h_change']?.toDouble();
+          tradingVolume = data[coinName]['usd_24h_vol']?.toDouble();
+          marketCap = data[coinName]['usd_market_cap']?.toDouble();
+          return data[coinName]['usd']?.toDouble();
+        } else {
+          _showAlertDialog(
+            context,
+            "Data Error",
+            "The requested data for $coinName is not available.",
+          );
+        }
       } else {
-        debugPrint('Failed to fetch data. Status code: ${response.statusCode}');
-        return null;
+        _showAlertDialog(
+          context,
+          "Network Error",
+          "Failed to fetch data. Status code: ${response.statusCode}",
+        );
       }
     } catch (e) {
-      debugPrint('Error fetching Dogecoin price: $e');
-      return null;
+      debugPrint('Error fetching price: $e');
+      _showAlertDialog(
+        context,
+        "Error",
+        "An error occurred while fetching the price. Please try again.",
+      );
     }
+    return null;
   }
+  void _showAlertDialog(BuildContext context, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Future<double?> fetchPrice(String coinName) async {
+  //   String url =
+  //       "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=7";
+  //   try {
+  //     final response = await http.get(Uri.parse(url), headers: {
+  //       "accept": "application/json",
+  //       "x-cg-demo-api-key": "CG-ugm8MRqxgSuCAjmZGPVhsMMR"
+  //     });
+  //     debugPrint('response.statusCode ${response.statusCode}');
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> data = json.decode(response.body);
+  //       if (data[coinName]['usd']?.toDouble() != null) {
+  //         coinPrice = data[coinName]['usd']?.toDouble();
+  //         priceChange = data[coinName]['usd_24h_change']?.toDouble();
+  //         tradingVolume = data[coinName]['usd_24h_vol']?.toDouble();
+  //         marketCap = data[coinName]['usd_market_cap']?.toDouble();
+  //         return data[coinName]['usd']?.toDouble();
+  //       }else{
+  //         AlertDialog(
+  //           title: const Text('Alert'),
+  //           content: const Text('This is a simple alert dialog.'),
+  //           actions: [
+  //             TextButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pop(); // Close the dialog
+  //               },
+  //               child: const Text('Cancel'),
+  //             ),
+  //             ElevatedButton(
+  //               onPressed: () {
+  //                 // Perform an action here
+  //                 Navigator.of(context).pop();
+  //               },
+  //               child: const Text('OK'),
+  //             ),
+  //           ],
+  //         );
+  //       }
+  //     } else {
+  //       AlertDialog(
+  //         title: Text("Network error"),
+  //       );
+  //       debugPrint('Failed to fetch data. Status code: ${response.statusCode}');
+  //       return null;
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Error fetching price: $e');
+  //     return null;
+  //   }
+  //   return null;
+  // }
+
 
   String determineTradeAction(double priceChange, double tradingVolume) {
     if (priceChange < -5.0 && tradingVolume > 500000000) {
@@ -121,7 +210,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return percentageChange;
   }
 
-  //this function return the price after doing the calculation for the percentage desire
   double calculateSellPriceUp() {
     if (targetPercentageController.text.isEmpty ||
         double.tryParse(targetPercentageController.text) == null) {
@@ -150,34 +238,12 @@ class _MyHomePageState extends State<MyHomePage> {
       return 0.0;
     }
     double targetPercentage = double.parse(targetPercentageController.text);
-    double purchasePrice = double.parse(coinPricePurchaseController.text);
+    double purchasePrice =    double.parse(coinPricePurchaseController.text);
 
     if (purchasePrice <= 0) {
       throw ArgumentError('Purchase price must be greater than zero.');
     }
     return (purchasePrice * (1 - targetPercentage / 100));
-  }
-
-  double determinePricePercentage() {
-    if (coinPricePurchaseController.text.isEmpty ||
-        double.tryParse(coinPricePurchaseController.text) == null) {
-      return 0.0;
-    }
-    double purchasePrice = double.parse(coinPricePurchaseController.text);
-    return ((coinPrice - purchasePrice) / purchasePrice) * 100;
-  }
-
-  double priceVolume() {
-    if (coinPricePurchaseController.text.isEmpty ||
-        double.tryParse(coinPricePurchaseController.text) == null) {
-      return 0.0;
-    }
-    if (coinsQuantityController.text.isEmpty ||
-        double.tryParse(coinsQuantityController.text) == null) {
-      return 0.0;
-    }
-    double coinQuantity = double.parse(coinsQuantityController.text);
-    return coinPrice * coinQuantity;
   }
 
   double priceVolumeSellUp() {
@@ -205,6 +271,31 @@ class _MyHomePageState extends State<MyHomePage> {
     double coinQuantity = double.parse(coinsQuantityController.text);
     return calculateSellPriceDown() * coinQuantity;
   }
+
+  double priceVolume() {
+    if (coinPricePurchaseController.text.isEmpty ||
+        double.tryParse(coinPricePurchaseController.text) == null) {
+      return 0.0;
+    }
+    if (coinsQuantityController.text.isEmpty ||
+        double.tryParse(coinsQuantityController.text) == null) {
+      return 0.0;
+    }
+    double coinQuantity = double.parse(coinsQuantityController.text);
+    double coinPurchasePrice = double.parse(coinPricePurchaseController.text);
+    return coinPurchasePrice * coinQuantity;
+  }
+
+  double determinePricePercentage() {
+    if (coinPricePurchaseController.text.isEmpty ||
+        double.tryParse(coinPricePurchaseController.text) == null) {
+      return 0.0;
+    }
+    double purchasePrice = double.parse(coinPricePurchaseController.text);
+    return ((coinPrice - purchasePrice) / purchasePrice) * 100;
+  }
+
+
 
   String determineTradeActionAdvanced(
       double? priceChange, double? tradingVolume, double? marketCap) {
@@ -235,7 +326,7 @@ class _MyHomePageState extends State<MyHomePage> {
       isLoading = true;
     });
 
-    final fetchedPrice = await fetchPrice(coinNameController.text);
+    final fetchedPrice = await fetchPrice(context,coinNameController.text);
 
     setState(() {
       isLoading = false;
@@ -254,44 +345,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // void _incrementCounter() {
-  //   setState(() {
-  //     fetchPrice(coinNameController.text);
-  //     action = determineTradeAction(priceChange, tradingVolume);
-  //     actionColor = setColor(action);
-  //     determinePricePercentage();
-  //     calculateSellPriceUp();
-  //     calculateSellPriceDown();
-  //     priceVolumeSellDown();
-  //     priceVolumeSellUp();
-  //   });
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.kPrimaryColor1,
-      // drawer: Drawer(
-      //   backgroundColor: AppColors.kPrimaryColor1,
-      //   shadowColor: AppColors.kPrimaryColor,
-      //   child: Column(
-      //     children: [
-      //       AppTextButton(
-      //         title: "Signal Chart",
-      //         onTap: () {
-      //           Navigator.of(context).push(MaterialPageRoute(
-      //               builder: (context) => SignalScreen(
-      //                     title: 'Signal buy & sell',
-      //                   )));
-      //         },
-      //       ),
-      //     ],
-      //   ),
-      // ),
       appBar: AppBar(
         backgroundColor: AppColors.kPrimaryColor1,
-        //Theme.of(context).colorScheme.onPrimaryContainer,
-        // title: Text(widget.title, style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Padding(
