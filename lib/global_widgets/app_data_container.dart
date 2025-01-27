@@ -4,9 +4,10 @@ import '../config/app_colors.dart';
 import 'app_text.dart';
 
 class AppDataContainer extends StatelessWidget {
-  String? title, subtitle, subtitle2;
+  final String? title, subtitle, subtitle2, subtitle3;
 
-  AppDataContainer({super.key, this.title, this.subtitle, this.subtitle2});
+  const AppDataContainer(
+      {super.key, this.title, this.subtitle, this.subtitle2, this.subtitle3});
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +38,13 @@ class AppDataContainer extends StatelessWidget {
               ? SizedBox.shrink()
               : AppText(
                   title: subtitle2,
+                  fontSize: 15,
+                  fontColor: AppColors.kTextSecondaryFiled,
+                ),
+          subtitle3 == null
+              ? SizedBox.shrink()
+              : AppText(
+                  title: subtitle3,
                   fontSize: 15,
                   fontColor: AppColors.kTextSecondaryFiled,
                 ),

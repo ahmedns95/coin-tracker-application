@@ -93,6 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return null;
   }
+
   void _showAlertDialog(BuildContext context, String title, String message) {
     showDialog(
       context: context,
@@ -113,85 +114,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Future<double?> fetchPrice(String coinName) async {
-  //   String url =
-  //       "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=7";
-  //   try {
-  //     final response = await http.get(Uri.parse(url), headers: {
-  //       "accept": "application/json",
-  //       "x-cg-demo-api-key": "CG-ugm8MRqxgSuCAjmZGPVhsMMR"
-  //     });
-  //     debugPrint('response.statusCode ${response.statusCode}');
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> data = json.decode(response.body);
-  //       if (data[coinName]['usd']?.toDouble() != null) {
-  //         coinPrice = data[coinName]['usd']?.toDouble();
-  //         priceChange = data[coinName]['usd_24h_change']?.toDouble();
-  //         tradingVolume = data[coinName]['usd_24h_vol']?.toDouble();
-  //         marketCap = data[coinName]['usd_market_cap']?.toDouble();
-  //         return data[coinName]['usd']?.toDouble();
-  //       }else{
-  //         AlertDialog(
-  //           title: const Text('Alert'),
-  //           content: const Text('This is a simple alert dialog.'),
-  //           actions: [
-  //             TextButton(
-  //               onPressed: () {
-  //                 Navigator.of(context).pop(); // Close the dialog
-  //               },
-  //               child: const Text('Cancel'),
-  //             ),
-  //             ElevatedButton(
-  //               onPressed: () {
-  //                 // Perform an action here
-  //                 Navigator.of(context).pop();
-  //               },
-  //               child: const Text('OK'),
-  //             ),
-  //           ],
-  //         );
-  //       }
-  //     } else {
-  //       AlertDialog(
-  //         title: Text("Network error"),
-  //       );
-  //       debugPrint('Failed to fetch data. Status code: ${response.statusCode}');
-  //       return null;
-  //     }
-  //   } catch (e) {
-  //     debugPrint('Error fetching price: $e');
-  //     return null;
-  //   }
-  //   return null;
-  // }
-
-
   String determineTradeAction(double priceChange, double tradingVolume) {
     if (priceChange < -5.0 && tradingVolume > 500000000) {
-      setColor("Buy");
       return 'Buy';
     } else if (priceChange > 5.0 && tradingVolume > 500000000) {
-      setColor("Sell");
       return 'Sell';
     } else if (tradingVolume == 0) {
-      setColor("No value");
       return 'No value';
     } else {
-      setColor("Hold");
       return 'Hold';
-    }
-  }
-
-  Color setColor(String? type) {
-    switch (type) {
-      case 'Buy':
-        return Colors.green;
-      case 'Sell':
-        return Colors.red;
-      case 'Hold':
-        return Colors.yellow.shade700;
-      default:
-        return Colors.black;
     }
   }
 
@@ -238,7 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return 0.0;
     }
     double targetPercentage = double.parse(targetPercentageController.text);
-    double purchasePrice =    double.parse(coinPricePurchaseController.text);
+    double purchasePrice = double.parse(coinPricePurchaseController.text);
 
     if (purchasePrice <= 0) {
       throw ArgumentError('Purchase price must be greater than zero.');
@@ -272,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return calculateSellPriceDown() * coinQuantity;
   }
 
-  double priceVolume() {
+  double purchaseVolume() {
     if (coinPricePurchaseController.text.isEmpty ||
         double.tryParse(coinPricePurchaseController.text) == null) {
       return 0.0;
@@ -286,6 +217,15 @@ class _MyHomePageState extends State<MyHomePage> {
     return coinPurchasePrice * coinQuantity;
   }
 
+  double currentVolume() {
+    if (coinsQuantityController.text.isEmpty ||
+        double.tryParse(coinsQuantityController.text) == null) {
+      return 0.0;
+    }
+    double coinQuantity = double.parse(coinsQuantityController.text);
+    return coinPrice * coinQuantity;
+  }
+
   double determinePricePercentage() {
     if (coinPricePurchaseController.text.isEmpty ||
         double.tryParse(coinPricePurchaseController.text) == null) {
@@ -294,8 +234,6 @@ class _MyHomePageState extends State<MyHomePage> {
     double purchasePrice = double.parse(coinPricePurchaseController.text);
     return ((coinPrice - purchasePrice) / purchasePrice) * 100;
   }
-
-
 
   String determineTradeActionAdvanced(
       double? priceChange, double? tradingVolume, double? marketCap) {
@@ -326,13 +264,12 @@ class _MyHomePageState extends State<MyHomePage> {
       isLoading = true;
     });
 
-    final fetchedPrice = await fetchPrice(context,coinNameController.text);
+    final fetchedPrice = await fetchPrice(context, coinNameController.text);
 
     setState(() {
       isLoading = false;
       if (fetchedPrice != null) {
         action = determineTradeAction(priceChange, tradingVolume);
-        actionColor = setColor(action);
         determinePricePercentage();
         calculateSellPriceUp();
         calculateSellPriceDown();
@@ -418,10 +355,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         "%${determinePricePercentage().toStringAsFixed(2)}",
                   ),
                   AppDataContainer(
-                    title: "Purchase",
-                    subtitle: priceVolume().toStringAsFixed(2) == "0.00"
+                    title: "Volume",
+                    subtitle: currentVolume().toStringAsFixed(2) == "0.00"
                         ? "--"
-                        : "\$${priceVolume().toStringAsFixed(2)}",
+                        : "current:\$${currentVolume().toStringAsFixed(2)}",
+                    subtitle2: purchaseVolume().toStringAsFixed(2) == "0.00"
+                        ? "--"
+                        : "purchase:\$${purchaseVolume().toStringAsFixed(2)}",
+                    subtitle3: (currentVolume() - purchaseVolume())
+                                .toStringAsFixed(2) ==
+                            "0.00"
+                        ? "--"
+                        : "profit:\$${(currentVolume() - purchaseVolume()).toStringAsFixed(2)}",
                   ),
                 ],
               ),
