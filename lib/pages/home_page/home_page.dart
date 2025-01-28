@@ -8,7 +8,8 @@ import '../../global_widgets/app_text.dart';
 import '../../global_widgets/app_text_button.dart';
 import '../../global_widgets/app_text_form_field.dart';
 import '../signal_page/signal_screen.dart';
-
+import '../../services/shared_prefs_service.dart';
+import '../saved_results/saved_results_page.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -33,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isLoading = false;
   Future<double?> fetchPrice(BuildContext context, String coinName) async {
     String url =
-        "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=7";
+        "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=8";
     try {
       final response = await http.get(Uri.parse(url), headers: {
         "accept": "application/json",
@@ -108,10 +109,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   double calculateTargetPercentage(
-      double purchasePrice,
-      double currentPrice,
-      double targetPercentage,
-      ) {
+    double purchasePrice,
+    double currentPrice,
+    double targetPercentage,
+  ) {
     if (purchasePrice <= 0) {
       throw ArgumentError('Purchase price must be greater than zero.');
     }
@@ -236,8 +237,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-
-
   void _incrementCounter() async {
     setState(() {
       isLoading = true;
@@ -267,6 +266,32 @@ class _MyHomePageState extends State<MyHomePage> {
       backgroundColor: AppColors.kPrimaryColor1,
       appBar: AppBar(
         backgroundColor: AppColors.kPrimaryColor1,
+        title: AppText(title: widget.title),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.history,
+              color: AppColors.kPrimaryTextColor,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SavedResultsPage(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.settings,
+              color: AppColors.kPrimaryTextColor,
+            ),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -307,19 +332,49 @@ class _MyHomePageState extends State<MyHomePage> {
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,5}')),
                 ],
               ),
+              AppTextButton(title: "Pull data", onTap: _incrementCounter),
               AppTextButton(
-                title: "Pull coin data",
-                onTap: () {
-                  _incrementCounter();
+                onTap: () async {
+                  await fetchPrice(context, coinNameController.text);
+                  determineTradeActionAdvanced(
+                      priceChange, tradingVolume, marketCap);
+                  // Save the results
+                  final prefs = await SharedPrefsService.getInstance();
+                  await prefs.saveCoinData({
+                    'coinName': coinNameController.text,
+                    'currentPrice': coinPrice,
+                    'purchasePrice':
+                        double.tryParse(coinPricePurchaseController.text) ?? 0,
+                    'quantity':
+                        double.tryParse(coinsQuantityController.text) ?? 0,
+                    'currentVolume': currentVolume(),
+                    'purchaseVolume': purchaseVolume(),
+                    'profitOrLoss': (currentVolume() - purchaseVolume()),
+                    'currentPercentage':
+                        determinePricePercentage().toStringAsFixed(2),
+                    'targetPercentage':
+                        double.tryParse(targetPercentageController.text) ?? 0,
+                    'priceChange': priceChange,
+                    'tradingVolume': tradingVolume,
+                    'marketCap': marketCap,
+                    'action': action,
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Results saved successfully')),
+                    );
+                  }
                 },
+                title: 'Save Results',
               ),
               AppTextButton(
                 title: "Signal Chart",
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => SignalScreen(
-                        title: 'Signal buy & sell',
-                      )));
+                            title: 'Signal buy & sell',
+                          )));
                 },
               ),
               Row(
@@ -331,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ? "--"
                         : "\$${coinPrice.toStringAsFixed(5)}",
                     subtitle2:
-                    "%${determinePricePercentage().toStringAsFixed(2)}",
+                        "%${determinePricePercentage().toStringAsFixed(2)}",
                   ),
                   AppDataContainer(
                     title: "Volume",
@@ -342,8 +397,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         ? "--"
                         : "purchase:\$${purchaseVolume().toStringAsFixed(2)}",
                     subtitle3: (currentVolume() - purchaseVolume())
-                        .toStringAsFixed(2) ==
-                        "0.00"
+                                .toStringAsFixed(2) ==
+                            "0.00"
                         ? "--"
                         : "profit:\$${(currentVolume() - purchaseVolume()).toStringAsFixed(2)}",
                   ),
@@ -354,32 +409,34 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   AppDataContainer(
                     title:
-                    "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%"}${targetPercentageController.text}",
+                        "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%"}${targetPercentageController.text}",
                     subtitle:
-                    calculateSellPriceUp().toStringAsFixed(4) == "0.0000"
-                        ? "--"
-                        : "\$${calculateSellPriceUp().toStringAsFixed(4)}",
+                        calculateSellPriceUp().toStringAsFixed(4) == "0.0000"
+                            ? "--"
+                            : "\$${calculateSellPriceUp().toStringAsFixed(4)}",
                     subtitle2: priceVolumeSellUp().toStringAsFixed(2) == "0.00"
                         ? "--"
                         : "\$${priceVolumeSellUp().toStringAsFixed(2)}",
-                    subtitle3:    priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                    subtitle3: priceVolumeSellDown().toStringAsFixed(2) ==
+                            "0.00"
                         ? "--"
-                        : "\$${(priceVolumeSellUp()-purchaseVolume()).toStringAsFixed(2)}",
+                        : "\$${(priceVolumeSellUp() - purchaseVolume()).toStringAsFixed(2)}",
                   ),
                   AppDataContainer(
                     title:
-                    "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%-"}${targetPercentageController.text}",
+                        "Prediction ${coinPricePurchaseController.text.isEmpty == true ? "" : "%-"}${targetPercentageController.text}",
                     subtitle: calculateSellPriceDown().toStringAsFixed(4) ==
-                        "0.0000"
+                            "0.0000"
                         ? "--"
                         : "\$${calculateSellPriceDown().toStringAsFixed(4)}",
                     subtitle2:
-                    priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                        priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                            ? "--"
+                            : "\$${priceVolumeSellDown().toStringAsFixed(2)}",
+                    subtitle3: priceVolumeSellDown().toStringAsFixed(2) ==
+                            "0.00"
                         ? "--"
-                        : "\$${priceVolumeSellDown().toStringAsFixed(2)}",
-                    subtitle3: priceVolumeSellDown().toStringAsFixed(2) == "0.00"
-                        ? "--"
-                        : "\$${(priceVolumeSellDown()-purchaseVolume()).toStringAsFixed(2)}",
+                        : "\$${(priceVolumeSellDown() - purchaseVolume()).toStringAsFixed(2)}",
                   ),
                 ],
               ),
@@ -397,7 +454,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ],
               ),
-              SizedBox(height: 30,)
+              SizedBox(
+                height: 30,
+              )
             ],
           ),
         ),
