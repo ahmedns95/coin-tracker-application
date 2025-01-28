@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
-import 'config/app_colors.dart';
+import '../../config/app_colors.dart';
 
 class SignalScreen extends StatefulWidget {
   const SignalScreen({super.key, required this.title});
