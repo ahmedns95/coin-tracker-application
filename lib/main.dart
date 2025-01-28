@@ -383,6 +383,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     subtitle2: priceVolumeSellUp().toStringAsFixed(2) == "0.00"
                         ? "--"
                         : "\$${priceVolumeSellUp().toStringAsFixed(2)}",
+                    subtitle3:    priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                        ? "--"
+                        : "\$${(priceVolumeSellUp()-purchaseVolume()).toStringAsFixed(2)}",
                   ),
                   AppDataContainer(
                     title:
@@ -395,6 +398,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         priceVolumeSellDown().toStringAsFixed(2) == "0.00"
                             ? "--"
                             : "\$${priceVolumeSellDown().toStringAsFixed(2)}",
+                    subtitle3: priceVolumeSellDown().toStringAsFixed(2) == "0.00"
+                        ? "--"
+                        : "\$${(priceVolumeSellDown()-purchaseVolume()).toStringAsFixed(2)}",
                   ),
                 ],
               ),

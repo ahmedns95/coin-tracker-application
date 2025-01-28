@@ -34,14 +34,14 @@ class AppDataContainer extends StatelessWidget {
             fontSize: 15,
             fontColor: AppColors.kTextSecondaryFiled,
           ),
-          subtitle2 == null
+          subtitle2 == null ||subtitle2 == "0.00"||subtitle2 == "--"
               ? SizedBox.shrink()
               : AppText(
                   title: subtitle2,
                   fontSize: 15,
                   fontColor: AppColors.kTextSecondaryFiled,
                 ),
-          subtitle3 == null
+          subtitle3 == null ||subtitle2 == "0.00"||subtitle2 == "--"
               ? SizedBox.shrink()
               : AppText(
                   title: subtitle3,
