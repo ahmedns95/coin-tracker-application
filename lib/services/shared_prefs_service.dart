@@ -53,6 +53,16 @@ class SharedPrefsService {
         .toList();
   }
 
+  Future<bool> deleteCoinData(int index) async {
+    final List<String> existingData =
+        _preferences!.getStringList(_kSavedCoinsKey) ?? [];
+    if (index >= 0 && index < existingData.length) {
+      existingData.removeAt(index);
+      return await _preferences!.setStringList(_kSavedCoinsKey, existingData);
+    }
+    return false;
+  }
+
   Future<bool> clearSavedCoins() async {
     return await _preferences!.setStringList(_kSavedCoinsKey, []);
   }

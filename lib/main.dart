@@ -2,6 +2,7 @@ import 'package:coin_tracker_application/pages/home_page/home_page.dart';
 import 'package:coin_tracker_application/pages/settings_page/settings_page.dart';
 import 'package:coin_tracker_application/services/shared_prefs_service.dart';
 import 'package:flutter/material.dart';
+import '../../config/const.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,18 +19,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late bool _isDarkMode;
-
   @override
   void initState() {
     super.initState();
-    _isDarkMode = widget.prefs.getDarkMode();
-  }
-
-  void _updateTheme(bool isDark) {
-    setState(() {
-      _isDarkMode = isDark;
-    });
   }
 
   @override
@@ -37,19 +29,11 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Coin Tracker',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      //   colorScheme: ColorScheme.fromSeed(
-      //     seedColor: Colors.blue,
-      //     brightness: _isDarkMode ? Brightness.dark : Brightness.light,
-      //   ),
-      //   useMaterial3: true,
-      //   brightness: _isDarkMode ? Brightness.dark : Brightness.light,
-      // ),
       routes: {
-        '/': (context) => const MyHomePage(title: 'Coin Tracker'),
-        '/settings': (context) => const SettingsPage(),
+        AppRoutes.home: (context) => const MyHomePage(title: 'Coin Tracker'),
+        AppRoutes.settings: (context) => const SettingsPage(),
       },
+      initialRoute: AppRoutes.home,
     );
   }
 }

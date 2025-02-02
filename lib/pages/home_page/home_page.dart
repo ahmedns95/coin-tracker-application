@@ -8,8 +8,10 @@ import '../../global_widgets/app_text.dart';
 import '../../global_widgets/app_text_button.dart';
 import '../../global_widgets/app_text_form_field.dart';
 import '../signal_page/signal_screen.dart';
+import '../prediction_page/prediction_page.dart';
 import '../../services/shared_prefs_service.dart';
 import '../saved_results/saved_results_page.dart';
+import 'package:coin_tracker_application/config/const.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -34,11 +36,11 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isLoading = false;
   Future<double?> fetchPrice(BuildContext context, String coinName) async {
     String url =
-        "https://api.coingecko.com/api/v3/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=8";
+        "${AppConst.baseUrl}/simple/price?ids=$coinName&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true&include_last_updated_at=true&precision=8";
     try {
       final response = await http.get(Uri.parse(url), headers: {
         "accept": "application/json",
-        "x-cg-demo-api-key": "CG-ugm8MRqxgSuCAjmZGPVhsMMR"
+        "x-cg-demo-api-key": AppConst.apiKey
       });
 
       debugPrint('response.statusCode: ${response.statusCode}');
@@ -332,9 +334,33 @@ class _MyHomePageState extends State<MyHomePage> {
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,5}')),
                 ],
               ),
-              AppTextButton(title: "Pull data", onTap: _incrementCounter),
+              AppTextButton(
+                  title: "Pull data",
+                  onTap: () {
+                    if (coinNameController.text.isEmpty) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Please enter a coin name')),
+                        );
+                      }
+                      return;
+                    }
+                    setState(() {
+                      _incrementCounter();
+                    });
+                  }),
               AppTextButton(
                 onTap: () async {
+                  if (coinNameController.text.isEmpty) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Please enter a coin name')),
+                      );
+                    }
+                    return;
+                  }
                   await fetchPrice(context, coinNameController.text);
                   determineTradeActionAdvanced(
                       priceChange, tradingVolume, marketCap);
@@ -375,6 +401,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       builder: (context) => SignalScreen(
                             title: 'Signal buy & sell',
                           )));
+                },
+              ),
+              AppTextButton(
+                title: "Price Prediction",
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PredictionPage(),
+                    ),
+                  );
                 },
               ),
               Row(

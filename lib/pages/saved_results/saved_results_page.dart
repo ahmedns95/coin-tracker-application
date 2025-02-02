@@ -58,6 +58,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
             )
           : ListView.builder(
               padding: EdgeInsets.zero,
+              shrinkWrap: true,
               itemCount: savedCoins.length,
               reverse: true,
               itemBuilder: (context, index) {
@@ -65,7 +66,6 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
                 final savedAt = DateTime.parse(coin['savedAt']);
                 final formattedDate =
                     DateFormat('MMM dd, yyyy HH:mm a').format(savedAt);
-
                 return Card(
                   color: AppColors.kContainerBox,
                   shape: RoundedRectangleBorder(
@@ -87,10 +87,69 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
                             AppText(
                               title: coin['coinName']?.toUpperCase() ?? 'N/A',
                             ),
-                            AppText(
-                              title: formattedDate,
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: AppColors.kPrimaryTextColor,
+                                size: 25,
+                              ),
+                              onPressed: () async {
+                                // Show confirmation dialog
+                                final bool? confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      backgroundColor: AppColors.kContainerBox,
+                                      title: AppText(
+                                        title: 'Delete Record',
+                                      ),
+                                      content: AppText(
+                                        title:
+                                            'Are you sure you want to delete this record?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
+                                          child: AppText(
+                                            title: 'Cancel',
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                          child: AppText(
+                                            title: 'Delete',
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (confirm == true) {
+                                  final prefs =
+                                      await SharedPrefsService.getInstance();
+                                  final success = await prefs.deleteCoinData(
+                                      savedCoins.length - 1 - index);
+                                  if (success && mounted) {
+                                    setState(() {
+                                      _loadSavedCoins();
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Record deleted successfully'),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                             ),
                           ],
+                        ),
+                        AppText(
+                          title: formattedDate,
                         ),
                         const SizedBox(height: 8),
                         _buildInfoRow('Current Price',
@@ -99,9 +158,9 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
                             '\$${coin['purchasePrice']?.toStringAsFixed(7)}'),
                         _buildInfoRow(
                             'Quantity', coin['quantity']?.toString() ?? 'N/A'),
-                        _buildInfoRow('Current Volume',
+                        _buildInfoRow('Total worth',
                             '\$${coin['currentVolume']?.toStringAsFixed(2) ?? 'N/A'}'),
-                        _buildInfoRow('Purchase Volume',
+                        _buildInfoRow('Total cost',
                             '\$${coin['purchaseVolume']?.toStringAsFixed(2) ?? 'N/A'}'),
                         _buildInfoRow('Profit or Loss',
                             '\$${coin['profitOrLoss']?.toStringAsFixed(2) ?? 'N/A'},${coin['currentPercentage'] ?? 'N/A'}%'),
